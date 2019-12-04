@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import random
 
+#list of user agent to bypass captcha going to be chosen randomly
 user_agent_list = [
    #Chrome
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
@@ -35,16 +36,9 @@ user_agent_list = [
     'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)'
 ]
 
-Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state', 'current_adr', 'past_adr','phone_numbers','email', 'associated_names', 'relatives', 'associates', 'businesses'))
+Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state'))
 
 class PeopleFider():
-
-    def __init_(self):
-        self.people = [] #array of tuples of found people
-        self.header = 'AppleWebKit/537.36 (KHTML, like Gecko)'
-
-    def clear_list(self):
-        self.people.clear()
 
     @staticmethod
     def query(first, last, middle, dob,city,state):
@@ -62,13 +56,15 @@ class PeopleFider():
             'agerange': str(age) + '-' + str(age)
             }
         url = "https://www.truepeoplesearch.com/results?"
+        #bypass captcha
         user_agent = random.choice(user_agent_list)
+        #create a link for search
         url_result = url + urlencode(person_params)
         search_result = Request(url_result, headers={'User-Agent':user_agent})
+        #open the link with header and read teh result
         page = urlopen(search_result)
         soup = BeautifulSoup(page.read(), 'lxml')
-        # print(soup.prettify())
-        #check if person is found
+        #check something came up in search
         anchors = soup.find_all('a', {'class': 'btn btn-success btn-lg detail-link shadow-form', 'href': True})
         if len(anchors) > 0:
             #person is found, view their details
@@ -78,15 +74,13 @@ class PeopleFider():
             search_result = Request(url_result, headers={'User-Agent':user_agent})
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(), 'lxml')
-
-
+            print(soup.prettify())
 
         else:
             #person is not found
             return None
 
         return requested_info
-
 
 
 PeopleFider.query('Lucy', 'Zang', '', '1991-10-26', 'Boston', 'MA')
