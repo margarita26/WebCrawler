@@ -89,7 +89,6 @@ class PeopleFinder():
         return None
 
     #parse and return dictionary of required info form beautiful soup
-    @staticmethod
     def get_info(soup):
         keys = ['addreses','phone_numbers','associated_names','relatives','associates']
         requested_info = {key: None for key in keys}
@@ -104,12 +103,11 @@ class PeopleFinder():
                 info.append(name)
                 info.append(val)
             except AttributeError:
-                print("exception")
+                print()
         keys = PeopleFinder.proccess_info(requested_info, info)
         return keys
 
     #function that filles out the dictionary with info
-    @staticmethod
     def proccess_info(keys,info):
         for i in range(0, len(info)-1):
             current = info[i].strip()
@@ -153,19 +151,25 @@ class PeopleFinder():
 
         for i in l:
             if i.strip() == 'Current Address':
-                years.append(0)
+                years.append('current')
             else:   
                 if i[0] == '(':
                     n = 0
                     numbers = i.split()
                     if len(numbers) > 2:
+                        #removes paran from the string eg 2012)
                         n1 = numbers[len(numbers)-1][:-1]
                         n2 = numbers[1]
-                        n = int(n1) - int(n2) 
-                    years.append(n)
+                        n = int(n1) - int(n2)
+                    #append 1 because the difference can be 2012 - 2012
+                    #technically 0 but actually 1 year lived at that location 
+                    if n == 0: 
+                         years.append(1)
+                    else:
+                        years.append(n)
                 else:
                     addresses.append(i.strip())
-
+        #create tuples
         for i in range(0,len(addresses)):
             if i < len(years):
                 new.append((addresses[i], years[i]))
@@ -184,4 +188,4 @@ class PeopleFinder():
         return new         
         
 
-PeopleFinder.query('Lucy', 'Zang', '', '', '', '')
+PeopleFinder.query('Jason', 'Smith', '', '1978-10-5', '', '')
