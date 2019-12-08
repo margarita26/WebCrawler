@@ -47,7 +47,10 @@ class PeopleFinder():
     def query(first,last,middle,dob,city,state):
         global user_agent_list
         #get age
-        birth_day = datetime.strptime(dob, '%Y-%m-%d')
+        year = ''
+        if len(dob) > 0: 
+            birth_day = datetime.strptime(dob, '%Y-%m-%d')
+            year = birth_day.year
         
         #params for search
         person_params = {
@@ -55,8 +58,9 @@ class PeopleFinder():
             'middle': middle,
             'last': last,
             'citystatezip' : city + ' ' + state,
-            'dobyyyy': str(birth_day.year) 
+            'dobyyyy': year
             }
+
         url = "https://www.familytreenow.com/search/genealogy/results?"
         #bypass captcha
         user_agent = random.choice(user_agent_list)
@@ -73,16 +77,15 @@ class PeopleFinder():
         anchors = soup.find_all('a', {'class': 'btn btn-success btn-sm detail-link', 'href': True})
         l =  len(anchors)
         if l > 0:
-            #person is found, view details of the first person in search list
+            #view details of the first person in search list
             url_result += '&rid=0s0'
+            print(url_result)
             #bypass captcha
             user_agent = random.choice(user_agent_list)
             search_result = Request(url_result, headers={'User-Agent':user_agent})
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(),'lxml')
-            
-            #return 
-            PeopleFinder.get_info(soup)
+            return PeopleFinder.get_info(soup)
         return None
 
     #parse and return dictionary of required info form beautiful soup
@@ -102,32 +105,83 @@ class PeopleFinder():
                 info.append(val)
             except AttributeError:
                 print("exception")
-        keys = PeopleFinder.proccess_info(keys, info)
-        #return keys
+        keys = PeopleFinder.proccess_info(requested_info, info)
+        return keys
 
     #function that filles out the dictionary with info
+    @staticmethod
     def proccess_info(keys,info):
-        #remove new lines
-        for i in range(0, len(info)):
-            current = info[i]
-            new = current.splitlines()
-            current = ''.join(new)
-        #each string is in a different format 
-        for i in range(0, len(info),2):
-            info[i+1] = current
+        for i in range(0, len(info)-1):
+            current = info[i].strip()
             #this list will hold info for each section, eg Phone Numbers
-            if current is 'Associated Names ':
+            if current == 'Associated Names':
                 keys['associated_names'] = PeopleFinder.proccess_names(info[i+1])
-            if current is 'Possible Relatives ':
-                keys['relatives'] = PeopleFinder.proccess_relatives(info[i+1])
-            if current is 'Possible Associates ':
-                keys['associates'] = PeopleFinder.proccess_associates(info[i+1])
-            if current is 'Current & Past Addresses':
+            if current == 'Possible Relatives':
+                keys['relatives'] = PeopleFinder.proccess_associates_relatives(info[i+1])
+            if current == 'Possible Associates':
+                keys['associates'] = PeopleFinder.proccess_associates_relatives(info[i+1])
+            if current == 'Current & Past Addresses':
                 keys['addreses'] = PeopleFinder.proccess_addresses(info[i+1])
-            if current is 'Phone Numbers ':
-                keys['phone_numbers'] = PeopleFinder.proccess_addresses(info[i+1])
+            if current == 'Phone Numbers':
+                keys['phone_numbers'] = PeopleFinder.proccess_pnumbers(info[i+1])
+
+        for key,val in keys.items():
+            print(key,val) 
+
+        return keys
             
-    
+    def proccess_names(s):
+        l = s.split('\n')
+        names = list(filter(None,l))
+        return names
 
+    def proccess_associates_relatives(s):
+        l = s.split('\n')
+        names = list(filter(None,l))
+        new = []
+        for i in names:
+            if not i.strip().isdigit() and i != 'NameAgeBirth Year':
+                new.append(i.strip())
+        return new
 
-PeopleFinder.query('Lucy', 'Zang', '', '1991-10-26', 'San Diego', 'CA')
+    def proccess_addresses(s):
+        l = list(filter(None,s.split('\n')))
+        #tuples of addresses and number of years lived
+        new = []
+        addresses = []
+        years = []
+
+        for i in l:
+            if i.strip() == 'Current Address':
+                years.append(0)
+            else:   
+                if i[0] == '(':
+                    n = 0
+                    numbers = i.split()
+                    if len(numbers) > 2:
+                        n1 = numbers[len(numbers)-1][:-1]
+                        n2 = numbers[1]
+                        n = int(n1) - int(n2) 
+                    years.append(n)
+                else:
+                    addresses.append(i.strip())
+
+        for i in range(0,len(addresses)):
+            if i < len(years):
+                new.append((addresses[i], years[i]))
+            else:
+                new.append((addresses[i], 0))
+
+        return new
+
+    def proccess_pnumbers(s):
+        l = list(filter(None,s.split('\n')))
+        new = []
+
+        for i in l:
+            if i[0] == '(':
+                new.append(i)
+        return new         
+        
+
+PeopleFinder.query('Lucy', 'Zang', '', '', '', '')
