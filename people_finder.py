@@ -40,7 +40,7 @@ user_agent_list = [
 Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state'))
 
 #class with static methods that queries persons public record information from truepeoplesearch
-class PeopleFider():
+class PeopleFinder():
     # if you dont want to use one of the fields pass in an empty string,
     # site is still going to work if at least one of the params are filled out
     @staticmethod
@@ -48,45 +48,86 @@ class PeopleFider():
         global user_agent_list
         #get age
         birth_day = datetime.strptime(dob, '%Y-%m-%d')
-        age = relativedelta(datetime.today(),birth_day).years
+        
         #params for search
         person_params = {
-            'name' : first + ' ' + middle + ' ' + last,
+            'first' : first,
+            'middle': middle,
+            'last': last,
             'citystatezip' : city + ' ' + state,
-            'agerange': str(age) + '-' + str(age)
+            'dobyyyy': str(birth_day.year) 
             }
-        url = "https://www.truepeoplesearch.com/results?"
+        url = "https://www.familytreenow.com/search/genealogy/results?"
         #bypass captcha
         user_agent = random.choice(user_agent_list)
         #create a link for search with personal details
         url_result = url + urlencode(person_params)
         search_result = Request(url_result, headers={'User-Agent':user_agent})
-        #open the link with header and read teh result
+        #open the link  
         page = urlopen(search_result)
         #use beautiful soup for easier html parsing
         soup = BeautifulSoup(page.read(), 'lxml')
+
         #finds links to all people matched with paramters if found
         #the long class name appears when there is a button with 'View Details'
-        anchors = soup.find_all('a', {'class': 'btn btn-success btn-lg detail-link shadow-form', 'href': True})
+        anchors = soup.find_all('a', {'class': 'btn btn-success btn-sm detail-link', 'href': True})
         l =  len(anchors)
         if l > 0:
             #person is found, view details of the first person in search list
-            url_result += '&rid=0x0'
+            url_result += '&rid=0s0'
             #bypass captcha
             user_agent = random.choice(user_agent_list)
             search_result = Request(url_result, headers={'User-Agent':user_agent})
             page2 = urlopen(search_result)
-            soup = BeautifulSoup(page2.read(), 'lxml')
-            print(soup.prettify())
-            #return get_info(soup)
+            soup = BeautifulSoup(page2.read(),'lxml')
+            
+            #return 
+            PeopleFinder.get_info(soup)
         return None
 
     #parse and return dictionary of required info form beautiful soup
     @staticmethod
     def get_info(soup):
-        keys = ['current_adr','past_adr','phone_numbers','email','associated_names','relatives','associates','businesses']
+        keys = ['addreses','phone_numbers','associated_names','relatives','associates']
         requested_info = {key: None for key in keys}
+        #find all tables with information
+        results = soup.find_all('div', {'class': 'panel panel-primary'})
+        info = []  
+        #loops through each table e.g.Phone Numbers section
+        for result in results:
+            try:
+                name = result.find('div', {'class': 'panel-heading text-center'}).get_text() 
+                val = result.find('table', {'class': 'table table-condensed'}).get_text() 
+                info.append(name)
+                info.append(val)
+            except AttributeError:
+                print("exception")
+        keys = PeopleFinder.proccess_info(keys, info)
+        #return keys
 
-        return requested_info
+    #function that filles out the dictionary with info
+    def proccess_info(keys,info):
+        #remove new lines
+        for i in range(0, len(info)):
+            current = info[i]
+            new = current.splitlines()
+            current = ''.join(new)
+        #each string is in a different format 
+        for i in range(0, len(info),2):
+            info[i+1] = current
+            #this list will hold info for each section, eg Phone Numbers
+            if current is 'Associated Names ':
+                keys['associated_names'] = PeopleFinder.proccess_names(info[i+1])
+            if current is 'Possible Relatives ':
+                keys['relatives'] = PeopleFinder.proccess_relatives(info[i+1])
+            if current is 'Possible Associates ':
+                keys['associates'] = PeopleFinder.proccess_associates(info[i+1])
+            if current is 'Current & Past Addresses':
+                keys['addreses'] = PeopleFinder.proccess_addresses(info[i+1])
+            if current is 'Phone Numbers ':
+                keys['phone_numbers'] = PeopleFinder.proccess_addresses(info[i+1])
+            
+    
 
-PeopleFider.query('Lu', 'Zang', '', '1964-10-26', 'San Diego', 'CA')
+
+PeopleFinder.query('Lucy', 'Zang', '', '1991-10-26', 'San Diego', 'CA')
