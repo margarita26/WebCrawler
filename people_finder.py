@@ -37,7 +37,7 @@ user_agent_list = [
     'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)'
 ]
 
-Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state'))
+Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state', 'info'))
 
 #class with static methods that queries persons public record information from truepeoplesearch
 class PeopleFinder():
@@ -86,6 +86,7 @@ class PeopleFinder():
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(),'lxml')
             return PeopleFinder._get_info(soup)
+        print('not found')
         return None
 
     #parse and return dictionary of required info form beautiful soup
@@ -162,7 +163,7 @@ class PeopleFinder():
                         n2 = numbers[1]
                         n = int(n1) - int(n2)
                     #append 1 because the difference can be 2012 - 2012
-                    #technically 0 but actually 1 year lived at that location 
+                    #technically 0 but actually 1 year 
                     if n == 0: 
                          years.append(1)
                     else:
@@ -187,4 +188,4 @@ class PeopleFinder():
         return new         
         
 
-PeopleFinder.query('Jared', 'Smith', '', '', '', '')
+PeopleFinder.query('Rhonda', 'Hester', '', '', '', '')
