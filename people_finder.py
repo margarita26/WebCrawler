@@ -85,11 +85,11 @@ class PeopleFinder():
             search_result = Request(url_result, headers={'User-Agent':user_agent})
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(),'lxml')
-            return PeopleFinder.get_info(soup)
+            return PeopleFinder._get_info(soup)
         return None
 
     #parse and return dictionary of required info form beautiful soup
-    def get_info(soup):
+    def _get_info(soup):
         keys = ['addreses','phone_numbers','associated_names','relatives','associates']
         requested_info = {key: None for key in keys}
         #find all tables with information
@@ -104,36 +104,36 @@ class PeopleFinder():
                 info.append(val)
             except AttributeError:
                 print()
-        keys = PeopleFinder.proccess_info(requested_info, info)
+        keys = PeopleFinder._proccess_info(requested_info, info)
         return keys
 
-    #function that filles out the dictionary with info
-    def proccess_info(keys,info):
+    #function that fills out the dictionary with info
+    def _proccess_info(keys,info):
         for i in range(0, len(info)-1):
             current = info[i].strip()
             #this list will hold info for each section, eg Phone Numbers
             if current == 'Associated Names':
-                keys['associated_names'] = PeopleFinder.proccess_names(info[i+1])
+                keys['associated_names'] = PeopleFinder._proccess_names(info[i+1])
             if current == 'Possible Relatives':
-                keys['relatives'] = PeopleFinder.proccess_associates_relatives(info[i+1])
+                keys['relatives'] = PeopleFinder._proccess_associates_relatives(info[i+1])
             if current == 'Possible Associates':
-                keys['associates'] = PeopleFinder.proccess_associates_relatives(info[i+1])
+                keys['associates'] = PeopleFinder._proccess_associates_relatives(info[i+1])
             if current == 'Current & Past Addresses':
-                keys['addreses'] = PeopleFinder.proccess_addresses(info[i+1])
+                keys['addreses'] = PeopleFinder._proccess_addresses(info[i+1])
             if current == 'Phone Numbers':
-                keys['phone_numbers'] = PeopleFinder.proccess_pnumbers(info[i+1])
+                keys['phone_numbers'] = PeopleFinder._proccess_pnumbers(info[i+1])
 
         for key,val in keys.items():
             print(key,val) 
-
         return keys
             
-    def proccess_names(s):
+    def _proccess_names(s):
         l = s.split('\n')
         names = list(filter(None,l))
         return names
 
-    def proccess_associates_relatives(s):
+
+    def _proccess_associates_relatives(s):
         l = s.split('\n')
         names = list(filter(None,l))
         new = []
@@ -142,7 +142,7 @@ class PeopleFinder():
                 new.append(i.strip())
         return new
 
-    def proccess_addresses(s):
+    def _proccess_addresses(s):
         l = list(filter(None,s.split('\n')))
         #tuples of addresses and number of years lived
         new = []
@@ -169,16 +169,15 @@ class PeopleFinder():
                         years.append(n)
                 else:
                     addresses.append(i.strip())
-        #create tuples
+        #create 
         for i in range(0,len(addresses)):
             if i < len(years):
                 new.append((addresses[i], years[i]))
             else:
                 new.append((addresses[i], 0))
-
         return new
 
-    def proccess_pnumbers(s):
+    def _proccess_pnumbers(s):
         l = list(filter(None,s.split('\n')))
         new = []
 
@@ -188,4 +187,4 @@ class PeopleFinder():
         return new         
         
 
-PeopleFinder.query('Jason', 'Smith', '', '1978-10-5', '', '')
+PeopleFinder.query('Jared', 'Smith', '', '', '', '')
