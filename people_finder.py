@@ -6,6 +6,7 @@ import requests
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import random
+import time
 
 #~~~~~~~~~~~~~~~~~~~~~~~~ Part 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #list of user agent to bypass captcha going to be chosen randomly
@@ -48,9 +49,9 @@ class PeopleFinder():
         global user_agent_list
         #get age
         year = ''
-        if len(dob) > 0: 
-            birth_day = datetime.strptime(dob, '%Y-%m-%d')
-            year = birth_day.year
+        if len(dob) == 4: 
+            if dob[0] == '1' or dob[0] == '2':
+                year = dob
         
         #params for search
         person_params = {
@@ -79,10 +80,11 @@ class PeopleFinder():
         if l > 0:
             #view details of the first person in search list
             url_result += '&rid=0s0'
-            print(url_result)
+
             #bypass captcha
             user_agent = random.choice(user_agent_list)
             search_result = Request(url_result, headers={'User-Agent':user_agent})
+            time.sleep(40)
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(),'lxml')
             return PeopleFinder._get_info(soup)
@@ -123,9 +125,7 @@ class PeopleFinder():
                 keys['addreses'] = PeopleFinder._proccess_addresses(info[i+1])
             if current == 'Phone Numbers':
                 keys['phone_numbers'] = PeopleFinder._proccess_pnumbers(info[i+1])
-
-        for key,val in keys.items():
-            print(key,val) 
+        print(keys)
         return keys
             
     def _proccess_names(s):
@@ -155,19 +155,17 @@ class PeopleFinder():
                 years.append('current')
             else:   
                 if i[0] == '(':
-                    n = 0
                     numbers = i.split()
                     if len(numbers) > 2:
                         #removes paran from the string eg 2012)
                         n1 = numbers[len(numbers)-1][:-1]
                         n2 = numbers[1]
-                        n = int(n1) - int(n2)
+                        years.append((n2,n1))
                     #append 1 because the difference can be 2012 - 2012
                     #technically 0 but actually 1 year 
-                    if n == 0: 
-                         years.append(1)
                     else:
-                        years.append(n)
+                        n = numbers[len(numbers)-1][:-1]
+                        years.append((n,n))
                 else:
                     addresses.append(i.strip())
         #create 
@@ -188,4 +186,4 @@ class PeopleFinder():
         return new         
         
 
-PeopleFinder.query('Rhonda', 'Hester', '', '', '', '')
+PeopleFinder.query('Vincent', 'Elia', '', '1989', '', '')
