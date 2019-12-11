@@ -40,10 +40,10 @@ user_agent_list = [
 
 Person = namedtuple('Person',('fist', 'midlle','last','dob', 'city', 'state', 'info'))
 
-#class with static methods that queries persons public record information from truepeoplesearch
+#class with static methods that queries persons public record information from family tree
 class PeopleFinder():
-    # if you dont want to use one of the fields pass in an empty string,
-    # site is still going to work if at least one of the params are filled out
+    # this method returns a dictionary of scrapped information 
+    # in the form of a list for each key.
     @staticmethod
     def query(first,last,middle,dob,city,state):
         global user_agent_list
@@ -83,8 +83,9 @@ class PeopleFinder():
 
             #bypass captcha
             user_agent = random.choice(user_agent_list)
+            sleep = random.randint(10,40)
+            time.sleep(sleep)
             search_result = Request(url_result, headers={'User-Agent':user_agent})
-            time.sleep(40)
             page2 = urlopen(search_result)
             soup = BeautifulSoup(page2.read(),'lxml')
             return PeopleFinder._get_info(soup)
@@ -125,7 +126,6 @@ class PeopleFinder():
                 keys['addreses'] = PeopleFinder._proccess_addresses(info[i+1])
             if current == 'Phone Numbers':
                 keys['phone_numbers'] = PeopleFinder._proccess_pnumbers(info[i+1])
-        print(keys)
         return keys
             
     def _proccess_names(s):
@@ -186,4 +186,4 @@ class PeopleFinder():
         return new         
         
 
-PeopleFinder.query('Vincent', 'Elia', '', '1989', '', '')
+#PeopleFinder.query('Vincent', 'Elia', '', '1989', '', '')
