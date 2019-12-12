@@ -6,6 +6,18 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from pandas import ExcelWriter
 
+
+# The point of the analysis was to see where people end up moving given the age, number of states they lived in
+# and current state
+# i've noticed a big tendency of people moving around and then ending up in Florida or CA 
+# IDEAL (and ORIGINAL) analysis would involve checking where people tend to move based on their current income (using census data)
+# if we, for example, have such data in trainig data (current location, avg income for current zip - past zip, past avg icome), then given current and projected income
+# we can somewhat predict if the person is going to move to some other state/place etc
+#
+# Apologies, didn't have much time for the second part, really enjoyed working on part 1 
+# first time building web scrapers 
+
+
 data_to_analyze = []
 
 with open('people.json') as f: 
