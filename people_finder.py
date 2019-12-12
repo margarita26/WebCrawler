@@ -94,7 +94,7 @@ class PeopleFinder():
 
     #parse and return dictionary of required info form beautiful soup
     def _get_info(soup):
-        keys = ['addreses','phone_numbers','associated_names','relatives','associates']
+        keys = ['addresses','phone_numbers','associated_names','relatives','associates']
         requested_info = {key: None for key in keys}
         #find all tables with information
         results = soup.find_all('div', {'class': 'panel panel-primary'})
@@ -123,13 +123,15 @@ class PeopleFinder():
             if current == 'Possible Associates':
                 keys['associates'] = PeopleFinder._proccess_associates_relatives(info[i+1])
             if current == 'Current & Past Addresses':
-                keys['addreses'] = PeopleFinder._proccess_addresses(info[i+1])
+                keys['addresses'] = PeopleFinder._proccess_addresses(info[i+1])
             if current == 'Phone Numbers':
                 keys['phone_numbers'] = PeopleFinder._proccess_pnumbers(info[i+1])
+        print(keys)        
         return keys
             
     def _proccess_names(s):
         l = s.split('\n')
+        #removes empty strings
         names = list(filter(None,l))
         return names
 
@@ -154,6 +156,7 @@ class PeopleFinder():
             if i.strip() == 'Current Address':
                 years.append('current')
             else:   
+                #append the tuple of time period e.g (2001,2012)
                 if i[0] == '(':
                     numbers = i.split()
                     if len(numbers) > 2:
@@ -161,14 +164,12 @@ class PeopleFinder():
                         n1 = numbers[len(numbers)-1][:-1]
                         n2 = numbers[1]
                         years.append((n2,n1))
-                    #append 1 because the difference can be 2012 - 2012
-                    #technically 0 but actually 1 year 
                     else:
                         n = numbers[len(numbers)-1][:-1]
                         years.append((n,n))
                 else:
                     addresses.append(i.strip())
-        #create 
+        #create a tuple of address - time period and append to a new list
         for i in range(0,len(addresses)):
             if i < len(years):
                 new.append((addresses[i], years[i]))
@@ -186,4 +187,4 @@ class PeopleFinder():
         return new         
         
 
-#PeopleFinder.query('Vincent', 'Elia', '', '1989', '', '')
+PeopleFinder.query('Vincent', 'Elia', '', '1989', '', '')
